@@ -3,7 +3,7 @@ import requests
 import json
 import logging
 from typing import Dict, List, Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 import re
 from functools import lru_cache
@@ -36,17 +36,17 @@ class DeepSearchService:
             Resultados consolidados da busca profunda
         """
         if not self.is_configured():
-            logger.warning("⚠️ DeepSeek API não configurada")
+            logger.warning("DeepSeek API nao configurada")
             return None
         
         # Verificar cache
         cache_key = self._generate_cache_key(query, context_data)
         if cache_key in self.search_cache:
-            logger.info("📋 Usando resultado em cache para busca profunda")
+            logger.info("Usando resultado em cache para busca profunda")
             return self.search_cache[cache_key]
         
         try:
-            logger.info(f"🔍 Iniciando busca profunda: {query}")
+            logger.info(f"Iniciando busca profunda: {query}")
             
             # Enriquecer query com contexto
             enhanced_query = self._enhance_query_with_context(query, context_data)
@@ -61,14 +61,14 @@ class DeepSearchService:
                 # Salvar no cache
                 self.search_cache[cache_key] = consolidated_results
                 
-                logger.info("✅ Busca profunda concluída com sucesso")
+                logger.info("Busca profunda concluida com sucesso")
                 return consolidated_results
             else:
-                logger.warning("⚠️ Nenhum resultado encontrado na busca profunda")
+                logger.warning("Nenhum resultado encontrado na busca profunda")
                 return None
                 
         except Exception as e:
-            logger.error(f"❌ Erro na busca profunda: {str(e)}")
+            logger.error(f"Erro na busca profunda: {str(e)}")
             return None
     
     def _generate_cache_key(self, query: str, context_data: Optional[Dict]) -> str:
@@ -110,7 +110,7 @@ class DeepSearchService:
         current_query = query
         
         for iteration in range(self.max_iterations):
-            logger.info(f"🔄 Iteração {iteration + 1} de busca profunda")
+            logger.info(f"Iteracao {iteration + 1} de busca profunda")
             
             # Realizar busca atual
             iteration_result = self._perform_single_search(current_query, iteration)
@@ -120,7 +120,7 @@ class DeepSearchService:
                     'iteration': iteration + 1,
                     'query': current_query,
                     'results': iteration_result,
-                    'timestamp': datetime.utcnow().isoformat()
+                    'timestamp': datetime.now(timezone.utc).isoformat()
                 })
                 
                 # Refinar query para próxima iteração
@@ -133,12 +133,12 @@ class DeepSearchService:
                     
                     if refined_query and refined_query != current_query:
                         current_query = refined_query
-                        logger.info(f"🎯 Query refinada: {refined_query}")
+                        logger.info(f"Query refinada: {refined_query}")
                     else:
-                        logger.info("🏁 Não há necessidade de refinamento adicional")
+                        logger.info("Nao ha necessidade de refinamento adicional")
                         break
             else:
-                logger.warning(f"⚠️ Iteração {iteration + 1} não retornou resultados")
+                logger.warning(f"Iteracao {iteration + 1} nao retornou resultados")
                 break
             
             # Rate limiting
@@ -185,17 +185,17 @@ class DeepSearchService:
                 result = response.json()
                 if 'choices' in result and result['choices']:
                     content = result['choices'][0]['message']['content']
-                    logger.info(f"✅ Busca iteração {iteration + 1} bem-sucedida")
+                    logger.info(f"Busca iteracao {iteration + 1} bem-sucedida")
                     return content
                 else:
-                    logger.warning(f"⚠️ Resposta vazia na iteração {iteration + 1}")
+                    logger.warning(f"Resposta vazia na iteracao {iteration + 1}")
                     return None
             else:
-                logger.error(f"❌ Erro na API DeepSeek: {response.status_code} - {response.text}")
+                logger.error(f"Erro na API DeepSeek: {response.status_code} - {response.text}")
                 return None
                 
         except Exception as e:
-            logger.error(f"❌ Erro na busca individual: {str(e)}")
+            logger.error(f"Erro na busca individual: {str(e)}")
             return None
     
     def _create_search_prompt(self, query: str, iteration: int) -> str:
@@ -278,7 +278,7 @@ Priorize informações que possam gerar vantagem competitiva.
             return refined_query if refined_query != original_query else None
             
         except Exception as e:
-            logger.error(f"❌ Erro ao refinar query: {str(e)}")
+            logger.error(f"Erro ao refinar query: {str(e)}")
             return None
     
     def _extract_key_terms(self, text: str) -> List[str]:
@@ -306,7 +306,7 @@ Priorize informações que possam gerar vantagem competitiva.
             return found_terms
             
         except Exception as e:
-            logger.error(f"❌ Erro ao extrair termos-chave: {str(e)}")
+            logger.error(f"Erro ao extrair termos-chave: {str(e)}")
             return []
     
     def _categorize_price_range(self, price: float) -> str:
@@ -328,7 +328,7 @@ Priorize informações que possam gerar vantagem competitiva.
             consolidated_parts.append("=== PESQUISA PROFUNDA NA INTERNET ===\n")
             consolidated_parts.append(f"Consulta original: {original_query}")
             consolidated_parts.append(f"Iterações realizadas: {len(search_results)}")
-            consolidated_parts.append(f"Timestamp: {datetime.utcnow().isoformat()}")
+            consolidated_parts.append(f"Timestamp: {datetime.now(timezone.utc).isoformat()}")
             consolidated_parts.append("\n" + "="*60)
             
             # Consolidar resultados por iteração
@@ -365,7 +365,7 @@ Priorize informações que possam gerar vantagem competitiva.
             return "\n".join(consolidated_parts)
             
         except Exception as e:
-            logger.error(f"❌ Erro ao consolidar resultados: {str(e)}")
+            logger.error(f"Erro ao consolidar resultados: {str(e)}")
             return f"Erro na consolidação dos resultados de busca: {str(e)}"
     
     def _extract_key_insights(self, content: str) -> List[str]:
@@ -395,7 +395,7 @@ Priorize informações que possam gerar vantagem competitiva.
             return insights[:5]  # Retornar top 5
             
         except Exception as e:
-            logger.error(f"❌ Erro ao extrair insights: {str(e)}")
+            logger.error(f"Erro ao extrair insights: {str(e)}")
             return []
     
     @lru_cache(maxsize=100)
@@ -408,13 +408,13 @@ Priorize informações que possam gerar vantagem competitiva.
             result = self._perform_single_search(query, 0)
             return result
         except Exception as e:
-            logger.error(f"❌ Erro na busca rápida: {str(e)}")
+            logger.error(f"Erro na busca rapida: {str(e)}")
             return None
     
     def clear_cache(self):
         """Limpa o cache de buscas"""
         self.search_cache.clear()
-        logger.info("🗑️ Cache de buscas limpo")
+        logger.info("Cache de buscas limpo")
     
     def get_cache_stats(self) -> Dict:
         """Retorna estatísticas do cache"""

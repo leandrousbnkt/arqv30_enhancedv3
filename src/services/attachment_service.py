@@ -89,7 +89,7 @@ class AttachmentService:
             
             self.session_storage[session_id]['attachments'].append(attachment_data)
             
-            logger.info(f"✅ Anexo processado: {file.filename} (Tipo: {content_analysis['content_type']})")
+            logger.info(f"Anexo processado: {file.filename} (Tipo: {content_analysis['content_type']})")
             
             return {
                 'success': True,
@@ -99,7 +99,7 @@ class AttachmentService:
             }
             
         except Exception as e:
-            logger.error(f"❌ Erro ao processar anexo: {str(e)}")
+            logger.error(f"Erro ao processar anexo: {str(e)}")
             return {
                 'success': False,
                 'error': f'Erro no processamento: {str(e)}'
@@ -167,7 +167,7 @@ class AttachmentService:
             }
             
         except Exception as e:
-            logger.error(f"❌ Erro ao salvar arquivo: {str(e)}")
+            logger.error(f"Erro ao salvar arquivo: {str(e)}")
             return None
     
     def _analyze_file_content(self, file_info: Dict) -> Dict:
@@ -208,7 +208,7 @@ class AttachmentService:
             }
             
         except Exception as e:
-            logger.error(f"❌ Erro ao analisar conteúdo: {str(e)}")
+            logger.error(f"Erro ao analisar conteudo: {str(e)}")
             return {
                 'content_type': 'unknown',
                 'content': f'Erro na análise: {str(e)}',
@@ -471,13 +471,13 @@ class AttachmentService:
                 # Remover da memória
                 del self.session_storage[session_id]
                 
-                logger.info(f"🗑️ Sessão {session_id} limpa com sucesso")
+                logger.info(f"Sessao {session_id} limpa com sucesso")
                 return True
             
             return False
             
         except Exception as e:
-            logger.error(f"❌ Erro ao limpar sessão {session_id}: {str(e)}")
+            logger.error(f"Erro ao limpar sessao {session_id}: {str(e)}")
             return False
     
     def _cleanup_old_files(self):
@@ -490,10 +490,10 @@ class AttachmentService:
                 if session_data['created_at'] < cutoff_time:
                     self.clear_session(session_id)
             
-            logger.info("🧹 Limpeza de arquivos antigos concluída")
+            logger.info("Limpeza de arquivos antigos concluida")
             
         except Exception as e:
-            logger.error(f"❌ Erro na limpeza de arquivos: {str(e)}")
+            logger.error(f"Erro na limpeza de arquivos: {str(e)}")
     
     def get_service_stats(self) -> Dict:
         """Retorna estatísticas do serviço"""

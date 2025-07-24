@@ -39,13 +39,13 @@ class WebSailorIntegrationService:
             if self.websailor_service.is_available():
                 logger.info("✅ WebSailor inicializado com sucesso")
             else:
-                logger.warning("⚠️ WebSailor inicializado mas não está totalmente funcional")
+                logger.warning("WebSailor inicializado mas nao esta totalmente funcional")
                 
         except ImportError as e:
-            logger.warning(f"⚠️ WebSailor não disponível - dependências não instaladas: {e}")
+            logger.warning(f"WebSailor nao disponivel - dependencias nao instaladas: {e}")
             self.websailor_service = None
         except Exception as e:
-            logger.error(f"❌ Erro ao inicializar WebSailor: {e}")
+            logger.error(f"Erro ao inicializar WebSailor: {e}")
             self.websailor_service = None
     
     def is_available(self) -> bool:
@@ -75,7 +75,7 @@ class WebSailorIntegrationService:
             }
         
         try:
-            logger.info(f"🌐 Iniciando pesquisa profunda com WebSailor: {query}")
+            logger.info(f"Iniciando pesquisa profunda com WebSailor: {query}")
             
             # Preparar contexto enriquecido
             enhanced_context = self._prepare_context(context_data)
@@ -84,7 +84,7 @@ class WebSailorIntegrationService:
             result = self.websailor_service.perform_research(query, enhanced_context)
             
             if result['success']:
-                logger.info("✅ Pesquisa profunda concluída com sucesso")
+                logger.info("Pesquisa profunda concluida com sucesso")
                 return {
                     'success': True,
                     'websailor_used': True,
@@ -96,7 +96,7 @@ class WebSailorIntegrationService:
                     }
                 }
             else:
-                logger.warning(f"⚠️ WebSailor retornou erro: {result.get('error')}")
+                logger.warning(f"WebSailor retornou erro: {result.get('error')}")
                 return {
                     'success': False,
                     'error': result.get('error'),
@@ -105,7 +105,7 @@ class WebSailorIntegrationService:
                 }
                 
         except Exception as e:
-            logger.error(f"❌ Erro na pesquisa com WebSailor: {e}")
+            logger.error(f"Erro na pesquisa com WebSailor: {e}")
             return {
                 'success': False,
                 'error': str(e),

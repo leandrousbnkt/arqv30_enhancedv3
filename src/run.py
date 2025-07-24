@@ -8,7 +8,7 @@ Análise ultra-detalhada de mercado com IA avançada, WebSailor e busca profunda
 import os
 import sys
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -115,7 +115,7 @@ def create_app():
                 'app_name': 'ARQV30 Enhanced',
                 'version': '2.0.0',
                 'status': 'running',
-                'timestamp': datetime.utcnow().isoformat(),
+                'timestamp': datetime.now(timezone.utc).isoformat(),
                 'services': {
                     'gemini': {
                         'available': gemini_available,
@@ -152,7 +152,7 @@ def create_app():
                 'version': '2.0.0',
                 'status': 'error',
                 'error': str(e),
-                'timestamp': datetime.utcnow().isoformat()
+                'timestamp': datetime.now(timezone.utc).isoformat()
             }), 500
     
     # Rota de health check
@@ -161,7 +161,7 @@ def create_app():
         """Health check para balanceadores de carga"""
         return jsonify({
             'status': 'healthy',
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'version': '2.0.0'
         })
     

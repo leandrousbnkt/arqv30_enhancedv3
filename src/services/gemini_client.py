@@ -1,8 +1,8 @@
 import os
 import json
 import logging
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
-from datetime import datetime
 import google.generativeai as genai
 import time
 
@@ -53,9 +53,9 @@ class GeminiClient:
                 generation_config=self.generation_config,
                 safety_settings=self.safety_settings
             )
-            logger.info("✅ Cliente Gemini inicializado com sucesso")
+            logger.info("Cliente Gemini inicializado com sucesso")
         except Exception as e:
-            logger.error(f"❌ Erro ao inicializar Gemini: {e}")
+            logger.error(f"Erro ao inicializar Gemini: {e}")
             raise
     
     def generate_ultra_detailed_analysis(self, 
@@ -82,7 +82,7 @@ class GeminiClient:
             
             # Adicionar metadados
             analysis['metadata'] = {
-                'generated_at': datetime.utcnow().isoformat(),
+                'generated_at': datetime.now(timezone.utc).isoformat(),
                 'model': 'gemini-pro',
                 'search_context_used': bool(search_context),
                 'websailor_used': bool(websailor_context),
@@ -90,11 +90,11 @@ class GeminiClient:
                 'form_data_fields': list(form_data.keys())
             }
             
-            logger.info("✅ Análise ultra-detalhada gerada com sucesso")
+            logger.info("Analise ultra-detalhada gerada com sucesso")
             return analysis
             
         except Exception as e:
-            logger.error(f"❌ Erro na análise Gemini: {e}")
+            logger.error(f"Erro na analise Gemini: {e}")
             return self._generate_fallback_analysis(form_data)
     
     def _build_ultra_detailed_prompt(self, 
@@ -376,7 +376,7 @@ GERE A ANÁLISE AGORA:
             return analysis
             
         except json.JSONDecodeError as e:
-            logger.error(f"❌ Erro ao parsear JSON: {e}")
+            logger.error(f"Erro ao parsear JSON: {e}")
             logger.error(f"Resposta recebida: {response_text[:500]}...")
             
             # Tentar extrair informações mesmo com JSON inválido
@@ -436,7 +436,7 @@ GERE A ANÁLISE AGORA:
     def _generate_fallback_analysis(self, form_data: Dict) -> Dict:
         """Gera análise de fallback em caso de erro"""
         
-        logger.warning("⚠️ Gerando análise de fallback")
+        logger.warning("Gerando analise de fallback")
         
         return {
             "avatar_ultra_detalhado": {
@@ -482,7 +482,7 @@ GERE A ANÁLISE AGORA:
                 "Recomendações práticas para implementação"
             ],
             "metadata": {
-                "generated_at": datetime.utcnow().isoformat(),
+                "generated_at": datetime.now(timezone.utc).isoformat(),
                 "model": "fallback",
                 "status": "fallback_analysis"
             }
@@ -494,6 +494,6 @@ GERE A ANÁLISE AGORA:
             response = self.model.generate_content("Teste de conexão. Responda apenas: OK")
             return bool(response.text and "OK" in response.text.upper())
         except Exception as e:
-            logger.error(f"❌ Erro no teste de conexão Gemini: {e}")
+            logger.error(f"Erro no teste de conexao Gemini: {e}")
             return False
 

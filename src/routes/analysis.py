@@ -3,7 +3,7 @@ import os
 import sys
 from flask import Blueprint, request, jsonify, Response
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 from supabase import create_client, Client
 from services.gemini_client import GeminiClient
@@ -52,16 +52,16 @@ supabase: Client = None
 if supabase_url and supabase_key:
     try:
         supabase = create_client(supabase_url, supabase_key)
-        safe_print("[OK] Cliente Supabase configurado com sucesso")
+        safe_print("Cliente Supabase configurado com sucesso")
     except Exception as e:
-        safe_print(f"[ERROR] Erro ao configurar Supabase: {e}")
+        safe_print(f"Erro ao configurar Supabase: {e}")
 
 # Initialize services
 try:
     gemini_client = GeminiClient()
-    safe_print("[OK] Cliente Gemini Pro 2.5 configurado com sucesso")
+    safe_print("Cliente Gemini Pro 2.5 configurado com sucesso")
 except Exception as e:
-    safe_print(f"[ERROR] Erro ao inicializar Gemini: {e}")
+    safe_print(f"Erro ao inicializar Gemini: {e}")
     gemini_client = None
 
 # Initialize enhanced services
@@ -109,18 +109,18 @@ def analyze_market():
         analysis_data['objetivo_receita_float'] = safe_float_conversion(analysis_data['objetivo_receita'], 100000.0)
         analysis_data['orcamento_marketing_float'] = safe_float_conversion(analysis_data['orcamento_marketing'], 50000.0)
         
-        safe_print(f"[INFO] Iniciando analise ultra-detalhada para segmento: {analysis_data['segmento']}")
+        safe_print(f"Iniciando analise ultra-detalhada para segmento: {analysis_data['segmento']}")
         
         # Busca profunda na internet com WebSailor (prioritário) ou DeepSeek (fallback)
         search_context = None
         websailor_used = False
         
         if analysis_data['user_query']:
-            safe_print(f"[INFO] Realizando busca profunda para: {analysis_data['user_query']}")
+            safe_print(f"Realizando busca profunda para: {analysis_data['user_query']}")
             
             # Tentar WebSailor primeiro
             if websailor_service.is_available():
-                safe_print("[INFO] Usando WebSailor para pesquisa profunda")
+                safe_print("Usando WebSailor para pesquisa profunda")
                 websailor_result = websailor_service.perform_deep_web_research(
                     analysis_data['user_query'], 
                     analysis_data
@@ -129,13 +129,13 @@ def analyze_market():
                     search_context = websailor_result['results']
                     websailor_used = True
                 else:
-                    safe_print("[WARN] WebSailor falhou, usando DeepSeek como fallback")
+                    safe_print("WebSailor falhou, usando DeepSeek como fallback")
                     search_context = deep_search_service.perform_deep_search(
                         analysis_data['user_query'], 
                         context_data=analysis_data
                     )
             else:
-                safe_print("[INFO] Usando DeepSeek para busca profunda")
+                safe_print("Usando DeepSeek para busca profunda")
                 search_context = deep_search_service.perform_deep_search(
                     analysis_data['user_query'], 
                     context_data=analysis_data
@@ -149,14 +149,14 @@ def analyze_market():
         
         # Generate comprehensive analysis with Gemini Pro 2.5
         if gemini_client:
-            safe_print("[INFO] Usando Gemini Pro 2.5 com pesquisa profunda e analise de anexos")
+            safe_print("Usando Gemini Pro 2.5 com pesquisa profunda e analise de anexos")
             analysis_result = gemini_client.generate_ultra_detailed_analysis(
                 analysis_data,
                 search_context=search_context,
                 attachments_context=attachments_context
             )
         else:
-            safe_print("[WARN] Gemini nao disponivel, usando analise de fallback")
+            safe_print("Gemini nao disponivel, usando analise de fallback")
             analysis_result = create_fallback_analysis(analysis_data)
         
         # Adicionar contextos à resposta para transparência
@@ -170,11 +170,11 @@ def analyze_market():
             update_analysis_record(analysis_id, analysis_result)
             analysis_result['analysis_id'] = analysis_id
         
-        safe_print("[OK] Analise ultra-detalhada concluida com sucesso")
+        safe_print("Analise ultra-detalhada concluida com sucesso")
         return jsonify(analysis_result)
         
     except Exception as e:
-        safe_print(f"[ERROR] Erro na analise: {str(e)}")
+        safe_print(f"Erro na analise: {str(e)}")
         return jsonify({'error': 'Erro interno do servidor', 'details': str(e)}), 500
 
 @analysis_bp.route('/upload_attachment', methods=['POST'])
@@ -219,11 +219,11 @@ def deep_search_endpoint():
         if not query:
             return jsonify({'error': 'Query de pesquisa não fornecida'}), 400
 
-        safe_print(f"[INFO] Iniciando busca profunda para: {query}")
+        safe_print(f"Iniciando busca profunda para: {query}")
         
         # Tentar WebSailor primeiro
         if websailor_service.is_available():
-            safe_print("[INFO] Usando WebSailor para busca profunda")
+            safe_print("Usando WebSailor para busca profunda")
             websailor_result = websailor_service.perform_deep_web_research(query, context_data)
             
             if websailor_result['success']:
@@ -232,14 +232,14 @@ def deep_search_endpoint():
                     'method': 'websailor',
                     'results': websailor_result['results'],
                     'query': query,
-                    'timestamp': datetime.utcnow().isoformat(),
+                    'timestamp': datetime.now(timezone.utc).isoformat(),
                     'metadata': websailor_result.get('metadata', {})
                 })
             else:
-                safe_print("[WARN] WebSailor falhou, tentando DeepSeek")
+                safe_print("WebSailor falhou, tentando DeepSeek")
         
         # Fallback para DeepSeek
-        safe_print("[INFO] Usando DeepSeek para busca profunda")
+        safe_print("Usando DeepSeek para busca profunda")
         search_results = deep_search_service.perform_deep_search(query, context_data)
         
         if search_results:
@@ -248,7 +248,7 @@ def deep_search_endpoint():
                 'method': 'deepseek',
                 'results': search_results,
                 'query': query,
-                'timestamp': datetime.utcnow().isoformat()
+                'timestamp': datetime.now(timezone.utc).isoformat()
             })
         else:
             return jsonify({
@@ -258,7 +258,7 @@ def deep_search_endpoint():
             }), 404
             
     except Exception as e:
-        safe_print(f"[ERROR] Erro na busca profunda: {str(e)}")
+        safe_print(f"Erro na busca profunda: {str(e)}")
         return jsonify({'error': f'Erro na busca: {str(e)}'}), 500
 
 @analysis_bp.route('/websailor_research', methods=['POST'])
@@ -278,7 +278,7 @@ def websailor_research_endpoint():
                 'status': websailor_service.get_service_status()
             }), 503
         
-        safe_print(f"[INFO] Pesquisa WebSailor para: {query}")
+        safe_print(f"Pesquisa WebSailor para: {query}")
         
         result = websailor_service.perform_deep_web_research(query, context_data)
         
@@ -288,7 +288,7 @@ def websailor_research_endpoint():
                 'results': result['results'],
                 'metadata': result.get('metadata', {}),
                 'query': query,
-                'timestamp': datetime.utcnow().isoformat()
+                'timestamp': datetime.now(timezone.utc).isoformat()
             })
         else:
             return jsonify({
@@ -298,7 +298,7 @@ def websailor_research_endpoint():
             }), 500
             
     except Exception as e:
-        safe_print(f"[ERROR] Erro na pesquisa WebSailor: {str(e)}")
+        safe_print(f"Erro na pesquisa WebSailor: {str(e)}")
         return jsonify({'error': f'Erro na pesquisa: {str(e)}'}), 500
 
 @analysis_bp.route('/fact_check', methods=['POST'])
@@ -317,12 +317,12 @@ def fact_check_endpoint():
             'status': 'success',
             'statement': statement,
             'fact_check_result': result,
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'websailor_used': websailor_service.is_available()
         })
         
     except Exception as e:
-        safe_print(f"[ERROR] Erro na verificacao de fatos: {str(e)}")
+        safe_print(f"Erro na verificacao de fatos: {str(e)}")
         return jsonify({'error': f'Erro na verificação: {str(e)}'}), 500
 
 @analysis_bp.route('/market_research', methods=['POST'])
@@ -343,11 +343,11 @@ def market_research_endpoint():
             'topic': topic,
             'region': region,
             'results': result,
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now(timezone.utc).isoformat()
         })
         
     except Exception as e:
-        safe_print(f"[ERROR] Erro na pesquisa de mercado: {str(e)}")
+        safe_print(f"Erro na pesquisa de mercado: {str(e)}")
         return jsonify({'error': f'Erro na pesquisa: {str(e)}'}), 500
 
 @analysis_bp.route('/analyze_batch', methods=['POST'])
@@ -373,13 +373,13 @@ def analyze_batch_data():
                     report = future.result()
                     reports.append(report)
                 except Exception as e:
-                    safe_print(f"[ERROR] Erro ao processar item em lote {item_data}: {e}")
+                    safe_print(f"Erro ao processar item em lote {item_data}: {e}")
                     errors.append({'data': item_data, 'error': str(e)})
 
         return jsonify({'reports': reports, 'errors': errors})
         
     except Exception as e:
-        safe_print(f"[ERROR] Erro na analise em lote: {str(e)}")
+        safe_print(f"Erro na analise em lote: {str(e)}")
         return jsonify({'error': f'Erro na análise em lote: {str(e)}'}), 500
 
 def process_single_analysis_enhanced(data_item: Dict) -> Dict:
@@ -392,7 +392,7 @@ def process_single_analysis_enhanced(data_item: Dict) -> Dict:
     websailor_used = False
     
     if user_query:
-        safe_print(f"[INFO] Realizando busca profunda para query em lote: {user_query}")
+        safe_print(f"Realizando busca profunda para query em lote: {user_query}")
         
         # Tentar WebSailor primeiro
         if websailor_service.is_available():
@@ -446,7 +446,7 @@ def generate_pdf_report():
         )
         
     except Exception as e:
-        safe_print(f"[ERROR] Erro ao gerar PDF: {e}")
+        safe_print(f"Erro ao gerar PDF: {e}")
         return jsonify({'error': f'Erro ao gerar PDF: {e}'}), 500
 
 @analysis_bp.route('/session_attachments/<session_id>', methods=['GET'])
@@ -461,7 +461,7 @@ def get_session_attachments(session_id):
         })
         
     except Exception as e:
-        safe_print(f"[ERROR] Erro ao recuperar anexos da sessao: {str(e)}")
+        safe_print(f"Erro ao recuperar anexos da sessao: {str(e)}")
         return jsonify({'error': f'Erro ao recuperar anexos: {str(e)}'}), 500
 
 @analysis_bp.route('/clear_session/<session_id>', methods=['DELETE'])
@@ -476,13 +476,13 @@ def clear_session_attachments(session_id):
         })
         
     except Exception as e:
-        safe_print(f"[ERROR] Erro ao limpar sessao: {str(e)}")
+        safe_print(f"Erro ao limpar sessao: {str(e)}")
         return jsonify({'error': f'Erro ao limpar sessão: {str(e)}'}), 500
 
 def save_initial_analysis(data: Dict) -> Optional[int]:
     """Salva registro inicial da análise no Supabase"""
     if not supabase:
-        safe_print("[WARN] Supabase nao configurado, pulando salvamento")
+        safe_print("Supabase nao configurado, pulando salvamento")
         return None
     
     try:
@@ -500,16 +500,16 @@ def save_initial_analysis(data: Dict) -> Optional[int]:
             'user_query': data.get('user_query', ''),  # Nova coluna
             'session_id': data.get('session_id', ''),  # Nova coluna
             'status': 'processing',
-            'created_at': datetime.utcnow().isoformat()
+            'created_at': datetime.now(timezone.utc).isoformat()
         }
         
         result = supabase.table('analyses').insert(analysis_record).execute()
         if result.data:
             analysis_id = result.data[0]['id']
-            safe_print(f"[INFO] Analise salva no Supabase com ID: {analysis_id}")
+            safe_print(f"Analise salva no Supabase com ID: {analysis_id}")
             return analysis_id
     except Exception as e:
-        safe_print(f"[WARN] Erro ao salvar no Supabase: {str(e)}")
+        safe_print(f"Erro ao salvar no Supabase: {str(e)}")
     
     return None
 
@@ -530,14 +530,14 @@ def update_analysis_record(analysis_id: int, results: Dict):
             'websailor_used': results.get('websailor_used', False),  # Novo campo
             'attachments_used': results.get('attachments_used', False),  # Novo campo
             'status': 'completed',
-            'updated_at': datetime.utcnow().isoformat()
+            'updated_at': datetime.now(timezone.utc).isoformat()
         }
         
         supabase.table('analyses').update(update_data).eq('id', analysis_id).execute()
-        safe_print(f"[INFO] Analise {analysis_id} atualizada no Supabase")
+        safe_print(f"Analise {analysis_id} atualizada no Supabase")
         
     except Exception as e:
-        safe_print(f"[WARN] Erro ao atualizar analise no Supabase: {str(e)}")
+        safe_print(f"Erro ao atualizar analise no Supabase: {str(e)}")
 
 def create_fallback_analysis(data: Dict) -> Dict:
     """Cria análise de fallback quando Gemini falha"""
